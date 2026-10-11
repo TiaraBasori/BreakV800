@@ -1,0 +1,119 @@
+<html lang="zh-CN"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#120d10">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>全新 · 极限刹车挑战</title>
+    <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='90'&gt;🛑&lt;/text&gt;&lt;/svg&gt;">
+    <script type="module" crossorigin="" src="assets/index-BMfj2Faj.js"></script>
+    <link rel="stylesheet" crossorigin="" href="assets/index-D0EtOSyi.css">
+  </head>
+  <body>
+    <div id="app"><canvas style="display: block; width: 52px; height: 713px;" data-engine="three.js r186" width="52" height="713"></canvas></div>
+
+    <div id="hud" class="hidden">
+      <div class="hud-top">
+        <div class="hud-chip">
+          <span class="label">制动计时</span>
+          <span id="hudTimer" class="value mono">7.958s</span>
+        </div>
+        <div class="hud-chip">
+          <span class="label">距路障</span>
+          <span id="hudDistance" class="value mono">568m</span>
+        </div>
+      </div>
+
+      <div class="speedo">
+        <svg viewBox="0 0 200 120" class="speedo-svg">
+          <path class="speedo-track" d="M 20 110 A 80 80 0 0 1 180 110"></path>
+          <path id="speedoArc" class="speedo-arc" d="M 20 110 A 80 80 0 0 1 180 110" style="stroke-dasharray: 251.363px; stroke-dashoffset: 251.363px;"></path>
+          <line id="speedoMark" class="speedo-mark" x1="76.59607745519266" y1="48.28892798276262" x2="66.66714061800167" y2="22.108473187571008"></line>
+        </svg>
+        <div class="speedo-readout">
+          <span id="hudSpeed" class="speed mono">0</span>
+          <span class="unit">km/h</span>
+        </div>
+      </div>
+
+      <div class="force danger">
+        <div class="force-label">踏板力度</div>
+        <div class="force-bar">
+          <div id="forceFill" class="force-fill" style="height: calc(89.6492% - 2px);"></div>
+          <div class="force-limit"><span>1612N</span></div>
+        </div>
+        <div id="forceValue" class="force-value mono">1537 N</div>
+      </div>
+
+      <button id="brakeBtn" class="brake-btn" disabled="">
+        <span class="brake-icon"></span>
+        <span id="brakeText">刹车</span>
+      </button>
+    </div>
+
+    <div id="countdown" class="countdown hidden">GO</div>
+    <div id="toast" class="toast hidden">完美刹停！</div>
+
+    <section id="menu" class="panel menu hidden">
+      <div class="brand">新款也被OTA了？没关系，我们一年能造三款车</div>
+      <h1>极限刹车挑战</h1>
+      <p class="tagline">越快踩，越快停。别把刹车踏板踩断。</p>
+      <ul class="rules">
+        <li>车辆自动全力加速，<b>100 km/h</b> 后才能踩刹车</li>
+        <li>一踩下刹车，动力立即切断；<b>按得越久，力度越大</b></li>
+        <li>力度达到 <b class="danger">1612 N</b> 刹车踏板断裂，整车翻滚失败</li>
+        <li>得分 = 刹车初速度² ÷ 刹停用时，越高越好</li>
+      </ul>
+      <div class="actions">
+        <button id="startBtn" class="btn primary">开始挑战</button>
+        <button id="boardBtn" class="btn">排行榜</button>
+      </div>
+      <button id="muteBtn" class="mute">音效：开</button>
+      <p id="keyHint" class="hint-keys">按住屏幕任意位置或右下角按钮踩刹车</p>
+    </section>
+
+    <section id="result" class="panel result hidden">
+      <h2 id="resultTitle" class="ok">刹停成功</h2>
+      <p id="resultSub" class="result-sub">稳稳停住，V800 毫发无损</p>
+      <div class="stats">
+        <div><span class="label">刹车初速度</span><span id="statV0" class="mono">257.4 km/h</span></div>
+        <div><span class="label">刹停用时</span><span id="statTime" class="mono">7.958 s</span></div>
+        <div><span class="label">制动距离</span><span id="statDist" class="mono">317.3 m</span></div>
+        <div><span class="label">最大踏板力</span><span id="statForce" class="mono">1612 N</span></div>
+      </div>
+      <div id="chartBox" class="chart-box">
+        <div class="chart-head">
+          <span class="chart-title">制动过程</span>
+          <span class="legend"><i class="dot dot-speed"></i>车速 km/h</span>
+          <span class="legend"><i class="dot dot-force"></i>踏板力 N</span>
+          <span class="legend"><i class="dash"></i>断裂极限</span>
+        </div>
+        <canvas id="brakeChart" class="chart" width="390" height="150"></canvas>
+      </div>
+      <div class="score-box">
+        <span class="label">得分</span>
+        <span id="statScore" class="score mono">8326</span>
+      </div>
+      <form id="submitForm" class="submit-form">
+        <input id="nicknameInput" maxlength="12" placeholder="输入昵称上榜" autocomplete="off">
+        <button id="submitBtn" class="btn primary" type="submit">提交成绩</button>
+      </form>
+      <p id="submitMsg" class="submit-msg"></p>
+      <div class="actions">
+        <button id="retryBtn" class="btn primary">再来一次</button>
+        <button id="resultBoardBtn" class="btn">排行榜</button>
+      </div>
+    </section>
+
+    <section id="board" class="panel board hidden">
+      <div class="board-head">
+        <h2>排行榜 TOP 50</h2>
+        <button id="boardClose" class="close" aria-label="关闭">×</button>
+      </div>
+      <div class="board-cols"><span>#</span><span>昵称</span><span>初速度</span><span>用时</span><span>得分</span></div>
+      <ol id="boardList" class="board-list"></ol>
+    </section>
+
+    <div id="loading" class="loading done">正在生成 3D 场景…</div>
+
+
+</body></html>
