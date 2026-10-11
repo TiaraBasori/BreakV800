@@ -1,0 +1,5 @@
+worker/node_modules/
+worker/.wrangler/
+worker/.test-state*
+worker/.dev.vars
+.DS_Store

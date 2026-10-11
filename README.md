@@ -17,19 +17,20 @@
 ## 技术说明
 
 - Vite + esbuild 打包，单 JS bundle（746 KB），内含 **three.js r186** + **cannon-es** 物理引擎 + 全部游戏代码
-- 无任何外部素材：所有贴图、音效均为**程序化生成**（含车牌 `沪A·D1612F`）
-- 原版含服务端排行榜（`/api/leaderboard`、`/api/score`），随原站下线已不可用——客户端对 API 失败有容错，游戏本体完全离线可玩。排行榜面板会显示“请求失败”，属正常现象
+- 无任何外部素材：所有贴图、音效均为**程序化生成**
+- 原版排行榜服务端随原站下线失效，本仓库附带了一个 **Cloudflare Workers 重实现**（见下），排行榜功能已恢复；Worker 不可用时游戏本体完全离线可玩，排行榜面板显示“请求失败”，属正常现象
 
 ## 仓库内容
 
 ```
-index.html            原始页面（仅移除了 Cloudflare 统计 beacon，游戏代码零修改）
-assets/               原始打包产物（未修改）
-  index-BMfj2Faj.js   three.js + cannon-es + 游戏逻辑（746KB）
-  index-D0EtOSyi.css  样式
+index.html            原始页面（移除了统计 beacon；资源路径改为相对路径以适配 GitHub Pages）
+assets/               原始打包产物
+  index-BMfj2Faj.js   three.js + cannon-es + 游戏逻辑（746KB；仅把 2 处 API 地址指向自建 Worker）
+  index-D0EtOSyi.css  样式（未修改）
 reverse/              逆向（美化）源码，供阅读学习
   reverse-game-logic.beautified.js   游戏逻辑部分（物理/状态机/UI/音效/场景，约 6100 行）
   reverse-full.beautified.js         完整 bundle 美化版
+worker/               Cloudflare Workers 排行榜 API（D1 存储），详见 worker/README.md
 ```
 
 游戏物理速览（详见 `reverse/reverse-game-logic.beautified.js` 中的 `Pd` 配置）：
@@ -40,11 +41,30 @@ reverse/              逆向（美化）源码，供阅读学习
 得分 = round(v0² / 刹停用时)
 ```
 
-## 来源与致谢
+## 排行榜 API（Cloudflare Workers + D1）
 
-- 原作者：游戏随 [breakbreak.app](https://breakbreak.app) 发布，站内公告称“刹车大师原作者版已在《抖音小游戏：并非不可抗力》回归”。本仓库仅为抢救性存档，版权归原作者所有；如有异议请联系删除。
-- 归档于 2026-10，抓取自原站部署（brake.tp0k.us 镜像），并与 [Wayback Machine 快照](https://web.archive.org/web/20261010141449/https://brake.tp0k.us/) 逐字节校验一致。
+`worker/` 是原版 `/api/leaderboard` 与 `/api/score` 的重实现，供 GitHub Pages 版本使用：
 
-## 免责声明
+- **GET** `/api/leaderboard?limit=50` → `{ entries: [{ nickname, v0, stopTime, score }] }`
+- **POST** `/api/score` `{ nickname, v0, stopTime }` → `{ rank, score, best }`
 
-本项目是已下线网页游戏的非官方存档，仅用于保存与学习。不隶属于原作者或任何公司；游戏内容与品牌归其各自所有者。若原作回归且作者希望收回，本仓库将配合处理。
+安全设计：**得分由服务端重算**（round(v0²/stopTime)，客户端上报值仅作参考）、物理区间校验（100 ≤ v0 ≤ 260）、每 IP 30 秒限速（IP 以 SHA-256 摘要存储）、榜内只保留前 500 名。
+
+### 部署自己的实例
+
+```bash
+cd worker
+npm install
+npx wrangler login
+npx wrangler d1 create breakv800          # 输出 database_id，填入 wrangler.jsonc
+npx wrangler d1 migrations apply breakv800 --remote
+npx wrangler deploy                       # 得到 https://<name>.<account>.workers.dev
+```
+
+客户端 API 地址写死在 `assets/index-BMfj2Faj.js` 中（搜 `workers.dev/api`），换 Worker 域名时全局替换即可。本地测试：`npm test`（27 项断言，含计分/校验/排序/限速矩阵）。
+
+## 来源
+
+- 游戏原作者：游戏随 breakbreak.app 发布，站内公告称“刹车大师原作者版已在《抖音小游戏：并非不可抗力》回归”
+- 本仓库为抢救性存档，版权归原作者所有；如有异议请联系删除
+- 归档于 2026-10，抓取自原站部署（brake.tp0k.us 镜像），并与 [Wayback Machine 快照](https://web.archive.org/web/20261010141449/https://brake.tp0k.us/) 逐字节校验一致

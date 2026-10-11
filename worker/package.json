@@ -1,0 +1,15 @@
+{
+  "name": "breakv800-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "migrate:local": "wrangler d1 migrations apply breakv800 --local",
+    "migrate:remote": "wrangler d1 migrations apply breakv800 --remote",
+    "test": "node test/worker.test.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.149.0"
+  }
+}
